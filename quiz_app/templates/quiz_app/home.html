@@ -15,7 +15,7 @@
                 <p class="text-danger">Incorrect: {{quiz.ic_marks}}</p>
                 Other: {{quiz.other_marks}}</small></p>
         <hr>        
-        <a href="#!" class="card-link">View Quiz</a>
+        <a href="{% url 'quiz:view-quiz' quiz.quiz_id%}" class="card-link">View Quiz</a>
         <a href="#!" class="card-link text-success">Take Quiz</a>
         </div>
     </div>
