@@ -1,0 +1,23 @@
+{% extends 'quiz_app/base.html' %}
+{% block container %}
+<h3> Quizes </h3>
+{% for quiz in quizes %}
+    <div class="card">
+        <div class="card-body">
+        <h5 class="card-title">{{ quiz.quiz_title }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">Quiz Master: {{ quiz.quiz_master }}</h6>
+        <hr>
+        <p class="card-text">{{ quiz.quiz_description }}</p>
+        <p class="card-text mt-4">
+                Marking Scheme:
+                <small>
+                <p class="text-success">Correct: {{quiz.c_marks}}</p>
+                <p class="text-danger">Incorrect: {{quiz.ic_marks}}</p>
+                Other: {{quiz.other_marks}}</small></p>
+        <hr>        
+        <a href="#!" class="card-link">View Quiz</a>
+        <a href="#!" class="card-link text-success">Take Quiz</a>
+        </div>
+    </div>
+{% endfor %}
+{% endblock container %}
