@@ -1,0 +1,30 @@
+{% extends 'quiz_app/question_base.html' %}
+{% load mathfilters %}
+{% block container %}
+<div class="jumbotron">
+    <h2 class="display-5">Question {{question_no}} out of {{tot_questions}}</h2>
+    <hr class="my-4">
+    <h4 class="display-9">{{question.question_text}}</h4>
+    <p class="text-muted">       
+      Marking Scheme:
+      Correct: {{question.c_marks}}
+      Incorrect: {{question.ic_marks}}
+      Type: {{question.type}}
+    </p>
+    <form method="post"> 
+        {% csrf_token %}
+        {{form.answer}}
+        
+        {% if islastquestion %}
+          <button class="btn btn-danger" type="submit">End Quiz</button>
+        {%else%}
+          <button class="btn btn-success" type="submit">Next Question</a>
+        {%endif%}
+
+        <button class="btn btn-primary" onclick="this.form.reset()">Clear</a>
+    </form>
+
+    
+  </div>
+
+{% endblock container %}

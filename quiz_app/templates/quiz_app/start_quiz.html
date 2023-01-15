@@ -1,18 +1,10 @@
 {% extends 'quiz_app/base.html' %}
 {% block container %}
 <div class="jumbotron">
-    <h2 class="display-4">Quiz {{quiz_id}}:{{quiz_title}}</h2>
+    <h2 class="display-4">{{quiz_title}}</h2>
     <p class="lead">By {{quiz_master}}</p>
     <hr class="my-4">
     <p>{{quiz_description}}</p>
-    <p>
-        <small>
-            Marking Scheme:
-            <p class="text-success">Correct: {{c_marks}}</p>
-            <p class="text-danger">Incorrect: {{ic_marks}}</p>
-            <p>Other: {{other_marks}}</p>
-        </small>
-    </p>
     <a class="btn btn-success btn-lg" href="{% url 'quiz:view-question' quiz_id 1%}" role="button">Start Quiz</a>
   </div>
 

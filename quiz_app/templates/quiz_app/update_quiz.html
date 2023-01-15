@@ -1,0 +1,25 @@
+{% extends 'quiz_app/base.html' %}
+{%block container%}
+
+{%for question in questions%}
+    <div class="card mb-5">
+        <div class="card-body">
+            <h5 class="card-title">{{ question.question_text }}</h5>
+            <hr>
+            {%for choice in question.choice_set.all%}
+                <div class="input-group mb-3">
+                    <input type="text"  value="{{choice.choice_text}}" disabled>
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="button">Update Choice</button>
+                        <button class="btn btn-danger" type="button">Delete Choice</button>
+                    </div>
+                </div>
+            {%endfor%}
+            <hr>
+            <a href="#" class="card-link">Update Question</a>
+            <a href="#" class="card-link text-danger">Delete Question</a>
+        </div>
+    </div>
+{%endfor%}
+
+{%endblock container%}

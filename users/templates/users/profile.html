@@ -1,0 +1,37 @@
+{% extends 'quiz_app/base.html' %}
+{% block container %}
+<h2>Profile of {{user.username}}</h2>
+{% if user.QuizMaster %}
+    {% for quiz in user.quiz_set.all%}
+        <div class="card mb-5">
+            <div class="card-body">
+            <h5 class="card-title">{{ quiz.quiz_title }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted"><a href="{% url 'profile' quiz.quiz_master.username %}">Quiz Master: {{ quiz.quiz_master }}</a></h6>
+            <hr>
+            <p class="card-text">{{ quiz.quiz_description }}</p>
+            <p class="card-text">Number of responses: {{ quiz.quizresponse_set.all|length}}</p>
+            <hr>        
+            {% if request.user.QuizMaster%}
+                <a href="{% url 'quiz:update-quiz' quiz.id%}" class="card-link">Update Quiz</a>
+                <a href="{%url 'quiz:delete-quiz' quiz.id%}" class="card-link text-danger">Delete Quiz</a>
+            {%else%}
+                <a href="{% url 'quiz:view-quiz' quiz.id%}" class="card-link">View Quiz</a>
+            {% endif %}
+            </div>
+        </div>
+    {%endfor%}
+{%else%}
+    {% for quiz_response in user.quizresponse_set.all%}
+        <div class="card mb-5">
+            <div class="card-body">
+            <h5 class="card-title">{{ quiz_response.quiz.quiz_title }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted"><a href="{% url 'profile' quiz_response.quiz.quiz_master.username %}">Quiz Master: {{ quiz_response.quiz.quiz_master }}</a></h6>
+            <hr>
+            <p class="card-text">{{ quiz_response.quiz.quiz_description }}</p>
+            <hr>        
+            <a href="{% url 'quiz:view-quiz-response' quiz_response.quiz.id 1%}" class="card-link">View Responses</a>
+            </div>
+        </div>
+    {%endfor%}
+{%endif%}
+{% endblock container %}

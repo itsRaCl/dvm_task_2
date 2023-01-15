@@ -1,0 +1,9 @@
+{% extends "quiz_app/base.html" %}
+{% block container %}
+    <div class="jumbotron">
+        <form method="POST" class="justify-content-center">
+            {% csrf_token%}
+            <button class="btn btn-danger" type="submit">Are you sure you want to delete quiz: {{quiz.quiz_title}}?</button>
+        </form>
+    </div>
+{% endblock container %}
