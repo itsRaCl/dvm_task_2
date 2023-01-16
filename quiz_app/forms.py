@@ -20,3 +20,14 @@ class QuestionConf(forms.Form):
 
 class ChoiceConf(forms.Form):
     choice_text = forms.CharField(max_length=100)
+
+
+class UpdateQuestion(forms.Form):
+    question_text = forms.CharField(widget=forms.Textarea())
+    c_marks = forms.IntegerField()
+    ic_marks = forms.IntegerField()
+    answer = forms.CharField(max_length=100)
+
+
+class UpdateChoice(forms.Form):
+    choice_text = forms.CharField(max_length=100)

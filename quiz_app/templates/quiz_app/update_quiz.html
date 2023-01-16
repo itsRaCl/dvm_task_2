@@ -3,23 +3,25 @@
 
 {%for question in questions%}
     <div class="card mb-5">
-        <div class="card-body">
-            <h5 class="card-title">{{ question.question_text }}</h5>
+        <div class="card-body ">
+            <div class="card-title form-inline">
+                <h5 class="mr-auto">{{ question.question_text }}</h5>
+                <a href="{% url 'quiz:update-question' quiz.id forloop.counter%}" class="card-link">Update Question</a>
+                <a href="{%url 'quiz:delete-question' quiz.id forloop.counter%}" class="card-link text-danger">Delete Question</a>
+            </div>
             <hr>
             {%for choice in question.choice_set.all%}
                 <div class="input-group mb-3">
                     <input type="text"  value="{{choice.choice_text}}" disabled>
                     <div class="input-group-append">
-                        <button class="btn btn-primary" type="button">Update Choice</button>
-                        <button class="btn btn-danger" type="button">Delete Choice</button>
+                        <a href="{% url 'quiz:update-choice' quiz.id forloop.parentloop.counter forloop.counter %}"><button class="btn btn-primary mr-3 ml-3" type="button">Update Choice</button></a>
+                        <a href="{% url 'quiz:delete-choice' quiz.id forloop.parentloop.counter forloop.counter %}"><button class="btn btn-danger" type="button">Delete Choice</button></a>
                     </div>
                 </div>
             {%endfor%}
-            <hr>
-            <a href="#" class="card-link">Update Question</a>
-            <a href="#" class="card-link text-danger">Delete Question</a>
+            <a href="{%url 'quiz:create-choice' quiz.id questions|length forloop.counter question.choice_set.all|length|add:1 question.choice_set.all|length|add:1%}" class="btn btn-success">Add Choice</a>
         </div>
     </div>
 {%endfor%}
-
+<a href="{%url 'quiz:create-questions' quiz.id questions|length|add:1 questions|length|add:1%}" class="btn btn-success">Add Question</a>
 {%endblock container%}

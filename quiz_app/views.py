@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from .models import Quiz, QuizResponse, Choice, Question
 from django import forms
 from django.contrib.auth.decorators import login_required
-from .forms import QuizConf, QuestionConf, ChoiceConf
+from .forms import QuizConf, QuestionConf, ChoiceConf, UpdateQuestion, UpdateChoice
 from django.contrib import messages
 
 # Create your views here.
@@ -44,8 +44,11 @@ def view_quiz(request, quiz_id):
 @login_required
 def question_view(request, quiz_id, question_no):
     if request.user.QuizMaster:
-        messages.warning(request, "You are a QuizMaster, you cannot attempt a quiz")
-        return redirect("quiz:quiz-home")
+        messages.warning(
+            request,
+            "You are a QuizMaster, you cannot attempt a quiz, redirected to your profile",
+        )
+        return redirect("profile", request.user.get_username())
     else:
         quiz = Quiz.objects.get(pk=quiz_id)
         question = list(quiz.question_set.all())[question_no - 1]
@@ -306,6 +309,111 @@ def update_quiz(request, quiz_id):
             "quiz_app/update_quiz.html",
             {"quiz": quiz, "questions": list(quiz.question_set.all())},
         )
+    else:
+        messages.warning(
+            "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"
+        )
+
+
+@login_required
+def delete_question(request, quiz_id, question_number):
+    quiz = Quiz.objects.get(pk=quiz_id)
+    if request.user.QuizMaster and request.user == quiz.quiz_master:
+        question = list(quiz.question_set.all())[question_number - 1]
+        if request.method == "POST":
+            question.delete()
+            messages.success(request, "The question has been deleted successfully")
+            return redirect("quiz:update-question", quiz_id)
+        else:
+            return render(
+                request,
+                "quiz_app/delete_question.html",
+                {
+                    "quiz_id": quiz_id,
+                },
+            )
+    else:
+        messages.warning(
+            "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"
+        )
+
+
+@login_required
+def delete_choice(request, quiz_id, question_number, choice_number):
+    quiz = Quiz.objects.get(pk=quiz_id)
+    question = list(quiz.question_set.all())[question_number - 1]
+    if request.user.QuizMaster and request.user == quiz.quiz_master:
+        choice = list(question.choice_set.all())[choice_number - 1]
+        if request.method == "POST":
+            choice.delete()
+            messages.success(request, "The choice has been deleted successfully")
+            return redirect("quiz:update-quiz", quiz_id)
+        else:
+            return render(
+                request,
+                "quiz_app/delete_choice.html",
+                {
+                    "quiz_id": quiz_id,
+                },
+            )
+    else:
+        messages.warning(
+            "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"
+        )
+
+
+@login_required
+def update_question(request, quiz_id, question_number):
+    quiz = Quiz.objects.get(pk=quiz_id)
+    question = list(quiz.question_set.all())[question_number - 1]
+    question_dict = {
+        "question_text": question.question_text,
+        "c_marks": question.c_marks,
+        "ic_marks": question.ic_marks,
+        "answer": question.answer,
+    }
+    if request.user.QuizMaster and request.user == quiz.quiz_master:
+        if request.method == "POST":
+            form = UpdateQuestion(request.POST)
+            if form.is_valid():
+                form = form.cleaned_data
+                question.question_text = form.get("question_text")
+                question.c_marks = form.get("c_marks")
+                question.ic_marks = form.get("ic_marks")
+                question.answer = form.get("answer")
+                question.save()
+        else:
+            form = UpdateQuestion(question_dict)
+            return render(
+                request,
+                "quiz_app/update_question.html",
+                {"form": form, "question": question},
+            )
+    else:
+        messages.warning(
+            "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"
+        )
+
+
+@login_required
+def update_choice(request, quiz_id, question_number, choice_number):
+    quiz = Quiz.objects.get(pk=quiz_id)
+    question = list(quiz.question_set.all())[question_number - 1]
+    choice = list(question.choice_set.all())[choice_number - 1]
+    if request.user.QuizMaster and request.user == quiz.quiz_master:
+        if request.method == "POST":
+            form = UpdateChoice(request.POST)
+            if form.is_valid():
+                form = form.cleaned_data
+                choice.choice_text = form.get("choice_text")
+                choice.save()
+        else:
+            form = UpdateChoice({"choice_text": choice.choice_text})
+            return render(
+                request,
+                "quiz_app/update_choice.html",
+                {"form": form, "choice": choice},
+            )
     else:
         messages.warning(
             "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"

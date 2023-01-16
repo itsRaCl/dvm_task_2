@@ -9,3 +9,9 @@
 
 For HTML:
 - Bootstrap 4
+
+# Username = Passwords
+- QuizMaster1 = qm1@1234
+- QuizMaster2 = qm2@1234
+- RajClerk = rc@12345
+- SuperUser = su@12345

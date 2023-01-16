@@ -28,4 +28,24 @@ urlpatterns = [
         name="create-choice",
     ),
     path("update-quiz/<int:quiz_id>", views.update_quiz, name="update-quiz"),
+    path(
+        "delete-question/<int:quiz_id>/<int:question_number>",
+        views.delete_question,
+        name="delete-question",
+    ),
+    path(
+        "delete-choice/<int:quiz_id>/<int:question_number>/<int:choice_number>",
+        views.delete_choice,
+        name="delete-choice",
+    ),
+    path(
+        "update-question/<int:quiz_id>/<int:question_number>",
+        views.update_question,
+        name="update-question",
+    ),
+    path(
+        "update-question/<int:quiz_id>/<int:question_number>/<int:choice_number>",
+        views.update_choice,
+        name="update-choice",
+    ),
 ]
