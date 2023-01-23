@@ -25,10 +25,22 @@ class Choice(models.Model):
 class QuizResponse(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     quiz_taker = models.ForeignKey(User, on_delete=models.CASCADE)
+    marks_secured = models.IntegerField(default=0)
 
 
 class QuestionResponse(models.Model):
     quiz = models.ForeignKey(QuizResponse, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choice = models.ForeignKey(Choice, on_delete=models.CASCADE)
+    choice = models.TextField(max_length=100)
     status = models.CharField(max_length=10)
+
+
+class mcqResponse(models.Model):
+    quiz = models.ForeignKey(QuizResponse, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10)
+
+
+class mcqChoiceResponse(models.Model):
+    choice = models.TextField(max_length=100)
+    question = models.ForeignKey(mcqResponse, on_delete=models.CASCADE)

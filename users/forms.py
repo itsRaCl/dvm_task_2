@@ -6,10 +6,11 @@ from .models import User
 
 class CustomUserCreationForm(UserCreationForm):
     QuizMaster = forms.BooleanField(required=False)
+    email = forms.EmailField()
 
     class Meta:
         model = User
-        fields = ("username", "QuizMaster", "password1", "password2")
+        fields = ("username", "QuizMaster", "email", "password1", "password2")
 
 
 class CustomUserChangeForm(UserChangeForm):

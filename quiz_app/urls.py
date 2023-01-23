@@ -44,7 +44,7 @@ urlpatterns = [
         name="update-question",
     ),
     path(
-        "update-question/<int:quiz_id>/<int:question_number>/<int:choice_number>",
+        "update-choice/<int:quiz_id>/<int:question_number>/<int:choice_number>",
         views.update_choice,
         name="update-choice",
     ),

@@ -11,16 +11,30 @@
             Type: {{question.type}}
         </p>
         <hr>
-        <p>Given Answer: {{response.choice_text}}</p>
-        <p>Correct Answer: {{correct_choice.choice_text}}</p>
+        {%if question.type == "SCQ" or question.type == "TF" or question.type == "INT"%}
+            <p>Correct Answer: {{correct_choice}}</p>
+            <p>Given Answer: {{response}}</p>
+        {%endif%}
+
+        {%if question.type == "MCQ"%}
+            <p>Correct Answers: {{correct_choice}}</p>
+            <p>Seleted Responses:</p>
+            <ul>{%for r in response%}
+                <li><p>{{r.choice}}</p></li>
+            {%endfor%}
+            </ul>
+        {%endif%}
         {% if status == "C"%}
             <p class="text-success">Status : Correct</p>
         {%endif%}
         {% if status == "IC"%}
             <p class="text-danger">Status : Incorrect</p>
         {%endif%}
+        {% if status == "PC"%}
+            <p class="text-primary">Status : Partially Correct</p>
+        {%endif%}
         {% if status == "UA"%}
-            <p class="text-warning">Status : Unattempted</p>
+            <p class="text-muted">Status : Unattempted</p>
         {%endif%}
         {% if islastquestion %}
         <a href="{% url 'quiz:view-quiz-response' quiz_id last_question%}" class="btn btn-success">Previous Question</a>

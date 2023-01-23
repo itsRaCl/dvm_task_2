@@ -1,27 +1,39 @@
 {% extends 'quiz_app/base.html' %}
 {%block container%}
-
-{%for question in questions%}
-    <div class="card mb-5">
-        <div class="card-body ">
-            <div class="card-title form-inline">
-                <h5 class="mr-auto">{{ question.question_text }}</h5>
-                <a href="{% url 'quiz:update-question' quiz.id forloop.counter%}" class="card-link">Update Question</a>
-                <a href="{%url 'quiz:delete-question' quiz.id forloop.counter%}" class="card-link text-danger">Delete Question</a>
-            </div>
-            <hr>
-            {%for choice in question.choice_set.all%}
-                <div class="input-group mb-3">
-                    <input type="text"  value="{{choice.choice_text}}" disabled>
-                    <div class="input-group-append">
-                        <a href="{% url 'quiz:update-choice' quiz.id forloop.parentloop.counter forloop.counter %}"><button class="btn btn-primary mr-3 ml-3" type="button">Update Choice</button></a>
-                        <a href="{% url 'quiz:delete-choice' quiz.id forloop.parentloop.counter forloop.counter %}"><button class="btn btn-danger" type="button">Delete Choice</button></a>
-                    </div>
+<div class="alert alert-danger" role="alert">
+    If you change anything all the existring responses will be deleted
+</div>
+<a href="{%url 'quiz:create-questions' quiz.id questions|length|add:1 questions|length|add:1%}" class="btn btn-success mb-5">Add Question</a>
+{% if questions|length > 0%}
+    {%for question in questions%}
+        <div class="card mb-5">
+            <div class="card-body ">
+                <div class="card-title form-inline">
+                    <h5 class="mr-auto">{{ question.question_text }}</h5>
+                    <a href="{% url 'quiz:update-question' quiz.id forloop.counter%}" class="card-link">Update Question</a>
+                    <a href="{%url 'quiz:delete-question' quiz.id forloop.counter%}" class="card-link text-danger">Delete Question</a>
                 </div>
-            {%endfor%}
-            <a href="{%url 'quiz:create-choice' quiz.id questions|length forloop.counter question.choice_set.all|length|add:1 question.choice_set.all|length|add:1%}" class="btn btn-success">Add Choice</a>
+                <hr>
+                {%for choice in question.choice_set.all%}
+                    <div class="input-group mb-3">
+                        <input type="text"  value="{{choice.choice_text}}" disabled>
+                        {%if question.type == "SCQ" or question.type == "MCQ"%}
+                        <div class="input-group-append">
+                            <a href="{% url 'quiz:update-choice' quiz.id forloop.parentloop.counter forloop.counter %}"><button class="btn btn-primary mr-3 ml-3" type="button">Update Choice</button></a>
+                            <a href="{% url 'quiz:delete-choice' quiz.id forloop.parentloop.counter forloop.counter %}"><button class="btn btn-danger" type="button">Delete Choice</button></a>
+                        </div>
+                        {%endif%}
+                    </div>
+                {%endfor%}
+                <a href="{%url 'quiz:create-choice' quiz.id questions|length forloop.counter question.choice_set.all|length|add:1 question.choice_set.all|length|add:1%}" class="btn btn-success">Add Choice</a>
+                <div class="input-group mt-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Current Answer</span>
+                    </div>
+                    <input type="text"  value="{{question.answer}}" disabled>
+                </div>
+            </div>
         </div>
-    </div>
-{%endfor%}
-<a href="{%url 'quiz:create-questions' quiz.id questions|length|add:1 questions|length|add:1%}" class="btn btn-success">Add Question</a>
+    {%endfor%}
+{%endif%}
 {%endblock container%}

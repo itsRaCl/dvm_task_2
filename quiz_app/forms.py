@@ -1,32 +1,48 @@
 from django import forms
+from .models import Question, Choice, Quiz
+
+QUESTION_TYPES = [
+    ("SCQ", "SCQ"),
+    ("MCQ", "MCQ"),
+    ("INT", "Integer"),
+    ("TF", "True/False"),
+]
 
 
-class QuizConf(forms.Form):
-    quiz_title = forms.CharField(max_length=100)
-    quiz_description = forms.CharField(widget=forms.Textarea())
+class QuizConf(forms.ModelForm):
     no_of_questions = forms.IntegerField(min_value=1, initial=1)
 
+    class Meta:
+        model = Quiz
+        fields = ["quiz_title", "quiz_description", "no_of_questions"]
 
-class QuestionConf(forms.Form):
-    question_text = forms.CharField(widget=forms.Textarea())
-    c_marks = forms.IntegerField(initial=4)
-    ic_marks = forms.IntegerField(initial=-1)
-    type = forms.CharField(max_length=5)
-    answer = forms.CharField(max_length=100)
+
+class QuestionConf(forms.ModelForm):
     no_of_options = forms.IntegerField(
-        initial=0, help_text="Leave blank for Integer and TrueFalse"
+        initial=0, help_text="Leave as is for Integer and TrueFalse"
     )
+
+    class Meta:
+        model = Question
+        fields = [
+            "question_text",
+            "c_marks",
+            "ic_marks",
+            "type",
+            "answer",
+            "no_of_options",
+        ]
+        widgets = {"type": forms.RadioSelect(choices=QUESTION_TYPES)}
 
 
 class ChoiceConf(forms.Form):
     choice_text = forms.CharField(max_length=100)
 
 
-class UpdateQuestion(forms.Form):
-    question_text = forms.CharField(widget=forms.Textarea())
-    c_marks = forms.IntegerField()
-    ic_marks = forms.IntegerField()
-    answer = forms.CharField(max_length=100)
+class UpdateQuestion(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ["question_text", "c_marks", "ic_marks", "answer"]
 
 
 class UpdateChoice(forms.Form):

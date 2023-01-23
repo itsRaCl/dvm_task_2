@@ -5,6 +5,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from .forms import QuizConf, QuestionConf, ChoiceConf, UpdateQuestion, UpdateChoice
 from django.contrib import messages
+from .scripts import reset_responses
 
 # Create your views here.
 def home(request):
@@ -70,7 +71,7 @@ def question_view(request, quiz_id, question_no):
             "choices": choices,
             "islastquestion": islastquestion,
         }
-        if question.type == "SCQ":
+        if question.type == "SCQ" or question.type == "TF":
 
             class Options(forms.Form):
                 answer = forms.CharField(
@@ -87,14 +88,10 @@ def question_view(request, quiz_id, question_no):
                 if form.is_valid():
                     selected = form.cleaned_data.get("answer")
                     if selected == "":
-                        choice = Choice(
-                            question=question, choice_text="<!UNATTEMPTED!>"
-                        )
-                        choice.save()
                         selected = None
                         status = "UA"
                         quiz_response.questionresponse_set.create(
-                            question=question, choice=choice
+                            question=question, choice="", status=status
                         )
                     else:
                         if question.answer == selected:
@@ -104,9 +101,7 @@ def question_view(request, quiz_id, question_no):
 
                         quiz_response.questionresponse_set.create(
                             question=question,
-                            choice=Choice.objects.filter(choice_text=selected).get(
-                                question=question
-                            ),
+                            choice=selected,
                             status=status,
                         )
                         if not islastquestion:
@@ -116,14 +111,88 @@ def question_view(request, quiz_id, question_no):
                             messages.success(request, "Quiz submitted successfully")
                             return redirect("quiz:quiz-home")
             else:
-                return render(request, "quiz_app/single_correct.html", context=context)
-        if question.type == "MCQ":
-            return HttpResponse("<h1>Mutliple type question, to be added later")
-        if question.type == "TF":
-            return HttpResponse("<h1>True false type questoin to be added later")
-        if question.type == "INT":
-            return HttpResponse("<h1>Integer type question to be added later")
-        # other conditionals will be added in the later stages of the task to add the other types of questions
+                return render(request, "quiz_app/view_question.html", context=context)
+        elif question.type == "MCQ":
+
+            class Options(forms.Form):
+                answer = forms.MultipleChoiceField(
+                    required=False,
+                    widget=forms.CheckboxSelectMultiple,
+                    choices=[(x.choice_text, x.choice_text) for x in choices],
+                )
+
+            form = Options()
+            context["form"] = form
+            if request.method == "POST":
+                form = Options(request.POST)
+                if form.is_valid():
+                    selected = form.cleaned_data.get("answer")
+                    if selected == []:
+                        selected = None
+                        status = "UA"
+                        mcqresponse = quiz_response.mcqresponse_set.create(
+                            question=question, status=status
+                        )
+                    else:
+                        if question.answer.split(", ") == selected:
+                            status = "C"
+                        elif set(selected).issubset(set(question.answer.split(", "))):
+                            status = "PC"
+                        else:
+                            status = "IC"
+
+                        mcqresponse = quiz_response.mcqresponse_set.create(
+                            question=question, status=status
+                        )
+                        for i in selected:
+                            mcqresponse.mcqchoiceresponse_set.create(
+                                choice=i,
+                            )
+                        if not islastquestion:
+                            messages.success(request, "Question Saved successfully")
+                            return redirect(f"/take/{quiz_id}/{next_question}")
+                        elif islastquestion:
+                            messages.success(request, "Quiz submitted successfully")
+                            return redirect("quiz:quiz-home")
+
+            else:
+                return render(request, "quiz_app/view_question.html", context=context)
+        elif question.type == "INT":
+
+            class Answer(forms.Form):
+                answer = forms.IntegerField()
+
+            form = Answer()
+            context["form"] = form
+            if request.method == "POST":
+                form = Answer(request.POST)
+                if form.is_valid():
+                    selected = str(form.cleaned_data.get("answer"))
+                    if selected == "":
+                        selected = None
+                        status = "UA"
+                        quiz_response.questionresponse_set.create(
+                            question=question, choice="", status=status
+                        )
+                    else:
+                        if question.answer == selected:
+                            status = "C"
+                        else:
+                            status = "IC"
+
+                        quiz_response.questionresponse_set.create(
+                            question=question,
+                            choice=selected,
+                            status=status,
+                        )
+                        if not islastquestion:
+                            messages.success(request, "Question Saved successfully")
+                            return redirect(f"/take/{quiz_id}/{next_question}")
+                        elif islastquestion:
+                            messages.success(request, "Quiz submitted successfully")
+                            return redirect("quiz:quiz-home")
+            else:
+                return render(request, "quiz_app/view_question.html", context=context)
 
 
 @login_required
@@ -135,14 +204,19 @@ def view_quiz_response(request, quiz_id, question_number):
     else:
         quiz_response = user.quizresponse_set.get(quiz=Quiz.objects.get(pk=quiz_id))
         question = list(quiz_response.quiz.question_set.all())[question_number - 1]
-        response = quiz_response.questionresponse_set.get(question=question).choice
-        status = quiz_response.questionresponse_set.get(question=question).status
+        if question.type == "SCQ" or question.type == "TF" or question.type == "INT":
+            response = quiz_response.questionresponse_set.get(question=question).choice
+            status = quiz_response.questionresponse_set.get(question=question).status
+        elif question.type == "MCQ":
+            response = list(
+                quiz_response.mcqresponse_set.get(
+                    question=question
+                ).mcqchoiceresponse_set.all()
+            )
+            status = quiz_response.mcqresponse_set.get(question=question).status
         tot_questions = len(list(Quiz.objects.get(pk=quiz_id).question_set.all()))
         islastquestion = tot_questions == question_number
-        print(status, type(status))
-        correct_choice = Choice.objects.filter(question=question).get(
-            choice_text=question.answer
-        )
+        correct_choice = question.answer
         context = {
             "question_number": question_number,
             "question": question,
@@ -195,6 +269,7 @@ def create_quiz(request):
                 )
                 quiz.save()
                 quiz_id = Quiz.objects.filter(quiz_master=request.user).last().id
+                request.session["call_type"] = "CREATE"
                 return redirect("quiz:create-questions", quiz_id, no_of_questions, 1)
         else:
             form = QuizConf()
@@ -239,6 +314,30 @@ def add_questions(request, quiz_id, total_questions, current_question):
                         total_questions,
                         current_question,
                     )
+            elif form.get("type") == "TF":
+                choice = Choice(
+                    choice_text="True",
+                    question=quiz.question_set.all().last(),
+                )
+                choice.save()
+                choice = Choice(
+                    choice_text="False",
+                    question=quiz.question_set.all().last(),
+                )
+                choice.save()
+                if request.session["call_type"] == "CREATE":
+                    messages.success(request, "Quiz has been added successfully")
+                    return redirect("quiz:quiz-home")
+                elif request.session["call_type"] == "UPDATE":
+                    messages.success(request, "Quiz has been updated successfully")
+                    return redirect("quiz:update-quiz", quiz_id)
+            elif form.get("type") == "INT":
+                if request.session["call_type"] == "CREATE":
+                    messages.success(request, "Quiz has been added successfully")
+                    return redirect("quiz:quiz-home")
+                elif request.session["call_type"] == "UPDATE":
+                    messages.success(request, "Quiz has been updated successfully")
+                    return redirect("quiz:update-quiz", quiz_id)
             else:
                 return redirect(
                     "quiz:create-question",
@@ -272,8 +371,12 @@ def add_choice(
                 current_question += 1
 
                 if current_question > total_questions:
-                    messages.success(request, "Quiz has been added successfully")
-                    return redirect("quiz:quiz-home")
+                    if request.session["call_type"] == "CREATE":
+                        messages.success(request, "Quiz has been added successfully")
+                        return redirect("quiz:quiz-home")
+                    elif request.session["call_type"] == "UPDATE":
+                        messages.success(request, "Quiz has been updated successfully")
+                        return redirect("quiz:update-quiz", quiz_id)
                 else:
                     return redirect(
                         "quiz:create-questions",
@@ -304,6 +407,7 @@ def add_choice(
 def update_quiz(request, quiz_id):
     quiz = Quiz.objects.get(pk=quiz_id)
     if request.user.QuizMaster and request.user == quiz.quiz_master:
+        request.session["call_type"] = "UPDATE"
         return render(
             request,
             "quiz_app/update_quiz.html",
@@ -311,8 +415,10 @@ def update_quiz(request, quiz_id):
         )
     else:
         messages.warning(
-            "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"
+            request,
+            "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz",
         )
+        return redirect("quiz:quiz-home")
 
 
 @login_required
@@ -321,9 +427,10 @@ def delete_question(request, quiz_id, question_number):
     if request.user.QuizMaster and request.user == quiz.quiz_master:
         question = list(quiz.question_set.all())[question_number - 1]
         if request.method == "POST":
+            reset_responses(quiz_id)
             question.delete()
             messages.success(request, "The question has been deleted successfully")
-            return redirect("quiz:update-question", quiz_id)
+            return redirect("quiz:update-quiz", quiz_id)
         else:
             return render(
                 request,
@@ -346,6 +453,7 @@ def delete_choice(request, quiz_id, question_number, choice_number):
         choice = list(question.choice_set.all())[choice_number - 1]
         if request.method == "POST":
             choice.delete()
+            reset_responses(quiz_id)
             messages.success(request, "The choice has been deleted successfully")
             return redirect("quiz:update-quiz", quiz_id)
         else:
@@ -382,6 +490,9 @@ def update_question(request, quiz_id, question_number):
                 question.ic_marks = form.get("ic_marks")
                 question.answer = form.get("answer")
                 question.save()
+                reset_responses(quiz_id)
+                messages.success(request, "The question has been updated successfully")
+                return redirect("quiz:update-quiz", quiz_id)
         else:
             form = UpdateQuestion(question_dict)
             return render(
@@ -407,6 +518,9 @@ def update_choice(request, quiz_id, question_number, choice_number):
                 form = form.cleaned_data
                 choice.choice_text = form.get("choice_text")
                 choice.save()
+                reset_responses(quiz_id)
+                messages.success(request, "The choice has been updated successfully")
+                return redirect("quiz:update-quiz", quiz_id)
         else:
             form = UpdateChoice({"choice_text": choice.choice_text})
             return render(

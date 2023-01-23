@@ -34,7 +34,11 @@ INSTALLED_APPS = [
     "quiz_app.apps.QuizAppConfig",
     "users.apps.UsersConfig",
     "crispy_forms",
-    "mathfilters",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "django.contrib.sites",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -84,6 +88,16 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql_psycopg2",
+#         "NAME": BASE_DIR / "quiz_database",
+#         "USER": "<db_username>",
+#         "PASSWORD": "<password>",
+#         "HOST": "<db_hostname_or_ip>",
+#         "PORT": "<db_port>",
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -134,3 +148,24 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 LOGIN_URL = "login"
 
 LOGIN_REDIRECT_URL = "quiz:quiz-home"
+
+SITE_ID = 3
+
+LOGOUT_REDIRECT_URL = "logout"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
+}

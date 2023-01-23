@@ -1,6 +1,8 @@
-from .models import Quiz, QuizResponse
-from users.models import User
+from .models import Quiz
 
 
-def validate(request, quiz):
-    return 1
+def reset_responses(quiz_id):
+    quiz = Quiz.objects.get(pk=quiz_id)
+
+    for i in quiz.quizresponse_set.all():
+        i.delete()
