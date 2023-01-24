@@ -8,8 +8,13 @@
         <h6 class="card-subtitle mb-2 text-muted"><a href="{% url 'profile' quiz.quiz_master.username %}">Quiz Master: {{ quiz.quiz_master }}</a></h6>
         <hr>
         <p class="card-text">{{ quiz.quiz_description }}</p>
-        <hr>        
+        <hr>
+        {%if quiz.quiz_password == ""%}        
         <a href="{% url 'quiz:view-quiz' quiz.id%}" class="card-link">View Quiz</a>
+        {%else%}
+        <a href="{% url 'quiz:view-protected-quiz' quiz.id%}" class="card-link">View a Quiz</a>
+        {%endif%}
+        <a href="{% url 'quiz:view-quiz-leaderboard' quiz.id%}" class="card-link">View Leaderboard</a>
         </div>
     </div>
 {% endfor %}

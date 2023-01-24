@@ -6,6 +6,7 @@ class Quiz(models.Model):
     quiz_title = models.CharField(max_length=100)
     quiz_master = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz_description = models.TextField(max_length=250)
+    quiz_password = models.CharField(max_length=250, default="", blank=True)
 
 
 class Question(models.Model):

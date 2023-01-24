@@ -11,9 +11,10 @@
             <p class="card-text">{{ quiz.quiz_description }}</p>
             <p class="card-text">Number of responses: {{ quiz.quizresponse_set.all|length}}</p>
             <hr>        
-            {% if request.user.QuizMaster%}
+            {% if self%}
                 <a href="{% url 'quiz:update-quiz' quiz.id%}" class="card-link">Update Quiz</a>
                 <a href="{%url 'quiz:delete-quiz' quiz.id%}" class="card-link text-danger">Delete Quiz</a>
+                <a href="{%url 'quiz:export-quiz' quiz.id%}" class="card-link text-success">Export Quiz</a>
             {%else%}
                 <a href="{% url 'quiz:view-quiz' quiz.id%}" class="card-link">View Quiz</a>
             {% endif %}
@@ -29,6 +30,8 @@
             <hr>
             <p class="card-text">{{ quiz_response.quiz.quiz_description }}</p>
             <hr>        
+            <p class="card-text">{{ quiz_response.marks_secured }}</p>
+            <hr>
             <a href="{% url 'quiz:view-quiz-response' quiz_response.quiz.id 1%}" class="card-link">View Responses</a>
             </div>
         </div>

@@ -1,0 +1,24 @@
+{% extends "quiz_app/base.html" %}
+{% block container %}
+<div class="jumbotron">
+  <h2 class="display-5">Leaderboard</h2>
+  <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Username</th>
+          <th scope="col">Marks</th>
+        </tr>
+      </thead>
+      {% for leader in leaders %}
+      <tbody>
+          <tr>
+              <th scope="row">{{forloop.counter}}</th>
+              <td>{{leader.quiz_taker}}</td>
+              <td>{{leader.marks_secured}}</td>
+          </tr>
+      </tbody>
+      {%endfor%}
+  </table>
+</div>
+{% endblock container %}

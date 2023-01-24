@@ -33,5 +33,5 @@ urlpatterns = [
         name="logout",
     ),
     path("profile/<str:username>", users_views.profile, name="profile"),
-    path("accounts/", include("allauth.urls")),
+    path("", include("allauth.urls")),
 ]

@@ -4,4 +4,4 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     QuizMaster = models.BooleanField(default=False)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)

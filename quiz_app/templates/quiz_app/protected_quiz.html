@@ -1,0 +1,17 @@
+{% extends 'quiz_app/base.html' %}
+{% load crispy_forms_tags%}
+{% block container %}
+<div class="jumbotron">
+    <h2 class="display-4">{{quiz_title}}</h2>
+    <p class="lead">By {{quiz_master}}</p>
+    <hr class="my-4">
+    <p>{{quiz_description}}</p>
+    <form method="POST">
+      {%csrf_token%}
+        {{form|crispy}}
+        <button class="btn btn-success btn-lg" href="{% url 'quiz:view-question' quiz_id 1%}">Start Quiz</button>
+    </form>
+    
+  </div>
+
+{% endblock container %}

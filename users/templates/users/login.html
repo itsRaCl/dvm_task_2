@@ -6,7 +6,7 @@
     <div class="content-section"><p>Welcome, You are logged in as {{ user.username }}</p></div>
     {% else %}
     <div class="content-section">
-        <a href="{% provider_login_url 'google' %}" class="btn btn-danger mb-5">Login With Google</a>
+        <a href="{% provider_login_url 'google' %}?next=/" class="btn btn-danger mb-5 mt-5">Login With Google</a>
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">

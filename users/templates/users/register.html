@@ -1,21 +1,27 @@
 {% extends "quiz_app/base.html" %}
+{% load socialaccount %}
 {% load crispy_forms_tags %}
 {% block container %}
-    <div class="jumbotron">
-        <form method="POST">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Join Today</legend>
-                {{ form|crispy }}
-            </fieldset>
-            <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Sign Up</button>
+    {% if user.is_authenticated %}
+    <div class="content-section"><p>Welcome, You are logged in as {{ user.username }}</p></div>
+    {% else %}
+        <div class="content-section">
+            <a href="{% provider_login_url 'google' %}" class="btn btn-danger mb-5 mt-5">Sign Up With Google</a>
+            <form method="POST">
+                {% csrf_token %}
+                <fieldset class="form-group">
+                    <legend class="border-bottom mb-4">Join Today</legend>
+                    {{ form|crispy }}
+                </fieldset>
+                <div class="form-group">
+                    <button class="btn btn-outline-info" type="submit">Sign Up</button>
+                </div>
+            </form>
+            <div class="border-top pt-3">
+                <small class="text-muted">
+                    Already Have An Account? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
+                </small>
             </div>
-        </form>
-        <div class="border-top pt-3">
-            <small class="text-muted">
-                Already Have An Account? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
-            </small>
         </div>
-    </div>
+    {%endif%}
 {% endblock container %}

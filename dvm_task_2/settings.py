@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -81,23 +82,18 @@ WSGI_APPLICATION = "dvm_task_2.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "quizapp",
+        "USER": "quizappprojectuser",
+        "PASSWORD": "quizapp@123",
+        "HOST": "localhost",
+        "PORT": "",
     }
 }
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql_psycopg2",
-#         "NAME": BASE_DIR / "quiz_database",
-#         "USER": "<db_username>",
-#         "PASSWORD": "<password>",
-#         "HOST": "<db_hostname_or_ip>",
-#         "PORT": "<db_port>",
-#     }
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -149,7 +145,7 @@ LOGIN_URL = "login"
 
 LOGIN_REDIRECT_URL = "quiz:quiz-home"
 
-SITE_ID = 3
+SITE_ID = 4
 
 LOGOUT_REDIRECT_URL = "logout"
 
@@ -168,4 +164,12 @@ SOCIALACCOUNT_PROVIDERS = {
             "access_type": "online",
         },
     }
+}
+
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
+
+SOCIALACCOUNT_FORMS = {
+    "signup": "users.forms.CustomUserGoogleCreationForm",
 }

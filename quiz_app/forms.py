@@ -1,5 +1,6 @@
 from django import forms
-from .models import Question, Choice, Quiz
+from .models import Question, Quiz
+from django.utils.translation import gettext_lazy as _
 
 QUESTION_TYPES = [
     ("SCQ", "SCQ"),
@@ -14,7 +15,10 @@ class QuizConf(forms.ModelForm):
 
     class Meta:
         model = Quiz
-        fields = ["quiz_title", "quiz_description", "no_of_questions"]
+        fields = ["quiz_title", "quiz_description", "no_of_questions", "quiz_password"]
+        help_texts = {
+            "quiz_password": _("Enter password if you want to have a password"),
+        }
 
 
 class QuestionConf(forms.ModelForm):

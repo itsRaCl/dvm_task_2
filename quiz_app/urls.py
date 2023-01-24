@@ -48,4 +48,19 @@ urlpatterns = [
         views.update_choice,
         name="update-choice",
     ),
+    path(
+        "view-quiz-leaderboard/<int:quiz_id>",
+        views.view_leaderboard,
+        name="view-quiz-leaderboard",
+    ),
+    path(
+        "protected-view/<int:quiz_id>/",
+        views.protected_quiz_view,
+        name="view-protected-quiz",
+    ),
+    path(
+        "export-quiz/<int:quiz_id>/",
+        views.export_quiz,
+        name="export-quiz",
+    ),
 ]

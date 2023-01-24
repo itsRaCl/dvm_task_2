@@ -5,7 +5,8 @@ from django import forms
 from django.contrib.auth.decorators import login_required
 from .forms import QuizConf, QuestionConf, ChoiceConf, UpdateQuestion, UpdateChoice
 from django.contrib import messages
-from .scripts import reset_responses
+from .scripts import reset_responses, calculate_marks
+from openpyxl import Workbook
 
 # Create your views here.
 def home(request):
@@ -18,19 +19,43 @@ def home(request):
 @login_required
 def view_quiz(request, quiz_id):
     quiz = Quiz.objects.get(pk=quiz_id)
-    quiz_response = QuizResponse(quiz=quiz, quiz_taker=request.user)
+    if quiz.quiz_password == "":
+        if request.user.QuizMaster:
+            isQM = True
+        else:
+            isQM = False
+            if quiz_id in [
+                x.quiz.id for x in list(request.user.quizresponse_set.all())
+            ]:
+                messages.warning(
+                    request,
+                    "You have already attempted this quiz, redirected you to your responses",
+                )
+                return redirect("quiz:view-quiz-response", quiz_id, 1)
+
+        context = {
+            "quiz_id": quiz.id,
+            "quiz_title": quiz.quiz_title,
+            "quiz_description": quiz.quiz_description,
+            "quiz_master": quiz.quiz_master,
+            "isQM": isQM,
+        }
+        return render(request, "quiz_app/start_quiz.html", context=context)
+    else:
+        return redirect("quiz:view-protected-quiz", quiz_id)
+
+
+@login_required
+def protected_quiz_view(request, quiz_id):
+    quiz = Quiz.objects.get(pk=quiz_id)
     if request.user.QuizMaster:
         isQM = True
     else:
         isQM = False
-        if quiz_response.quiz.id in [
-            x.quiz.id for x in list(request.user.quizresponse_set.all())
-        ]:
-            messages.warning(
-                request,
-                "You have already attempted this quiz, redirected you to your responses",
-            )
-            return redirect("quiz:view-quiz-response", quiz_id, 1)
+
+    class QuizPasswd(forms.Form):
+        password = forms.CharField(max_length=250, required=True)
+
     context = {
         "quiz_id": quiz.id,
         "quiz_title": quiz.quiz_title,
@@ -39,7 +64,20 @@ def view_quiz(request, quiz_id):
         "isQM": isQM,
     }
 
-    return render(request, "quiz_app/start_quiz.html", context=context)
+    form = QuizPasswd()
+    context["form"] = form
+    if request.method == "POST":
+        form = QuizPasswd(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data.get("password")
+            if password == quiz.quiz_password:
+                return redirect("quiz:view-question", quiz_id, 1)
+            else:
+                context["form"] = QuizPasswd()
+                messages.warning(request, "Enter correct password")
+                return render(request, "quiz_app/protected_quiz.html", context=context)
+    else:
+        return render(request, "quiz_app/protected_quiz.html", context=context)
 
 
 @login_required
@@ -94,7 +132,7 @@ def question_view(request, quiz_id, question_no):
                             question=question, choice="", status=status
                         )
                     else:
-                        if question.answer == selected:
+                        if question.answer.strip().lower() == selected.strip().lower():
                             status = "C"
                         else:
                             status = "IC"
@@ -108,6 +146,7 @@ def question_view(request, quiz_id, question_no):
                             messages.success(request, "Question Saved successfully")
                             return redirect(f"/take/{quiz_id}/{next_question}")
                         elif islastquestion:
+                            calculate_marks(quiz_response)
                             messages.success(request, "Quiz submitted successfully")
                             return redirect("quiz:quiz-home")
             else:
@@ -134,9 +173,15 @@ def question_view(request, quiz_id, question_no):
                             question=question, status=status
                         )
                     else:
-                        if question.answer.split(", ") == selected:
+                        if set(
+                            [x.strip().lower() for x in question.answer.split(", ")]
+                        ) == set([x.strip().lower() for x in selected]):
                             status = "C"
-                        elif set(selected).issubset(set(question.answer.split(", "))):
+                        elif set([x.strip().lower() for x in selected]).issubset(
+                            set(
+                                [x.strip().lower() for x in question.answer.split(", ")]
+                            )
+                        ):
                             status = "PC"
                         else:
                             status = "IC"
@@ -152,6 +197,7 @@ def question_view(request, quiz_id, question_no):
                             messages.success(request, "Question Saved successfully")
                             return redirect(f"/take/{quiz_id}/{next_question}")
                         elif islastquestion:
+                            calculate_marks(quiz_response)
                             messages.success(request, "Quiz submitted successfully")
                             return redirect("quiz:quiz-home")
 
@@ -189,7 +235,9 @@ def question_view(request, quiz_id, question_no):
                             messages.success(request, "Question Saved successfully")
                             return redirect(f"/take/{quiz_id}/{next_question}")
                         elif islastquestion:
+                            calculate_marks(quiz_response)
                             messages.success(request, "Quiz submitted successfully")
+
                             return redirect("quiz:quiz-home")
             else:
                 return render(request, "quiz_app/view_question.html", context=context)
@@ -266,6 +314,7 @@ def create_quiz(request):
                     quiz_title=form.get("quiz_title"),
                     quiz_description=form.get("quiz_description"),
                     quiz_master=request.user,
+                    quiz_password=form.get("quiz_password"),
                 )
                 quiz.save()
                 quiz_id = Quiz.objects.filter(quiz_master=request.user).last().id
@@ -329,6 +378,7 @@ def add_questions(request, quiz_id, total_questions, current_question):
                     messages.success(request, "Quiz has been added successfully")
                     return redirect("quiz:quiz-home")
                 elif request.session["call_type"] == "UPDATE":
+                    reset_responses(quiz_id)
                     messages.success(request, "Quiz has been updated successfully")
                     return redirect("quiz:update-quiz", quiz_id)
             elif form.get("type") == "INT":
@@ -336,6 +386,7 @@ def add_questions(request, quiz_id, total_questions, current_question):
                     messages.success(request, "Quiz has been added successfully")
                     return redirect("quiz:quiz-home")
                 elif request.session["call_type"] == "UPDATE":
+                    reset_responses(quiz_id)
                     messages.success(request, "Quiz has been updated successfully")
                     return redirect("quiz:update-quiz", quiz_id)
             else:
@@ -375,6 +426,7 @@ def add_choice(
                         messages.success(request, "Quiz has been added successfully")
                         return redirect("quiz:quiz-home")
                     elif request.session["call_type"] == "UPDATE":
+                        reset_responses(quiz_id)
                         messages.success(request, "Quiz has been updated successfully")
                         return redirect("quiz:update-quiz", quiz_id)
                 else:
@@ -532,3 +584,41 @@ def update_choice(request, quiz_id, question_number, choice_number):
         messages.warning(
             "You are not a quiz master cannot update quiz or you are no the quiz master for the quiz"
         )
+
+
+def view_leaderboard(request, quiz_id):
+    quiz = Quiz.objects.get(pk=quiz_id)
+    quiz_leaders = quiz.quizresponse_set.order_by("-marks_secured")[:10]
+    context = {"leaders": quiz_leaders}
+    return render(request, "quiz_app/leadboard.html", context=context)
+
+
+@login_required
+def export_quiz(request, quiz_id):
+    quiz = Quiz.objects.get(pk=quiz_id)
+    if quiz.quiz_master == request.user:
+        quiz_responses = list(quiz.quizresponse_set.all())
+        response = HttpResponse(content_type="application/ms-excel")
+        filename = f"{quiz.id}_{quiz.quiz_title}_responses.xlsx"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Responses"
+        ws.cell(row=1, column=1).value = "SrNo."
+        ws.cell(row=1, column=2).value = "Username"
+        ws.cell(row=1, column=3).value = "Email"
+        ws.cell(row=1, column=4).value = "Marks Secured"
+        for i in range(len(quiz_responses)):
+            quiz_response = quiz_responses[i]
+            ws.cell(row=i + 2, column=1).value = i + 1
+            ws.cell(row=i + 2, column=2).value = quiz_response.quiz_taker.username
+            ws.cell(row=i + 2, column=3).value = quiz_response.quiz_taker.email
+            ws.cell(row=i + 2, column=4).value = quiz_response.marks_secured
+        wb.save(response)
+        return response
+    else:
+        messages.warning(
+            request,
+            "You are not the quiz master for this quiz you cannot access this link",
+        )
+        return redirect("quiz:quiz-home")

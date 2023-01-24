@@ -21,5 +21,5 @@ def register(request):
 
 def profile(request, username):
     user = User.objects.get(username=username)
-    context = {"user": user}
+    context = {"user": user, "self": (request.user == user)}
     return render(request, "users/profile.html", context=context)

@@ -35,16 +35,16 @@
         {%endif%}
     </header>
 
-
+    {% if messages %}
     <div class="mt-5 container">
-      {% if messages %}
+      
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }}">
             {{ message }}
           </div>
         {% endfor %}
-      {% endif %}
     </div>
+    {%endif%}
     <div class="container">
         {% block container %}{% endblock container %}
     </div>
